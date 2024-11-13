@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
 
-const API_URL = 'http://localhost:5208/api/todo';
+const API_URL = 'http://localhost:5000/api/todo'; //Update the port based on your env setup
 const REQUEST_TIMEOUT = 10000; // 10 seconds timeout for requests
 
 export interface Todo {
