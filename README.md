@@ -51,7 +51,7 @@ Restore dependencies and run the project:
 dotnet restore
 dotnet run
 ```
-The API should be available at `http://localhost:5000` (port may vary).
+The API should be available at `http://localhost:5000` (port may vary, please update the correct API_URL in todo.service.ts).
 
 ### 3. Setup Frontend (Angular App)
 Navigate to the Angular project directory:
