@@ -19,11 +19,11 @@
             </div>
 
             <div class="row mb-3">
-                <div class="col-md-8">
+                <div class="col-md-8 input-text">
                     <input [(ngModel)]="newTodo" type="text" class="form-control" placeholder="Enter new todo"
                         (keyup.enter)="addTodo()" />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 add-button">
                     <button class="btn btn-primary w-100" (click)="addTodo()" [disabled]="loading">Add</button>
                 </div>
             </div>
