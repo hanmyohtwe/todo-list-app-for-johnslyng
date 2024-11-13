@@ -5,3 +5,8 @@
 .footer-icon {
   color: red;
 }
+@media screen and (max-width: 767px) {
+  .add-button button{
+    margin: 1rem 0;
+  }
+}
