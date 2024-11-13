@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { TodoService, Todo } from '../todo.service';
 import { FormsModule } from '@angular/forms';
 
@@ -16,45 +16,67 @@ export class TodoListComponent implements OnInit {
   errorMessage: string = '';
   loading: boolean = false;
 
-  constructor(private todoService: TodoService) {}
+  private readonly fallbackTimeout = 5000; // 5 seconds
+
+  constructor(
+    private todoService: TodoService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit(): void {
-    this.loadTodos();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadTodos();
+    }
   }
 
-  // Load todos from the backend
   loadTodos(): void {
     this.loading = true;
+    const fallbackTimer = setTimeout(() => {
+      if (this.loading) {
+        this.loading = false;
+        this.errorMessage = 'Request is taking longer than expected. Please try again later.';
+      }
+    }, this.fallbackTimeout);
+
     this.todoService.getTodos().subscribe({
       next: (todos) => {
+        clearTimeout(fallbackTimer);
         this.todos = todos;
         this.loading = false;
-        this.errorMessage = '';
+        this.errorMessage = ''; // Clear any previous error messages
       },
       error: (error) => {
-        this.errorMessage = 'Failed to load TODOs. Please try again later.';
+        clearTimeout(fallbackTimer);
+        this.errorMessage = error.message || 'Failed to load TODOs. Please try again later.';
         this.loading = false;
         console.error('Error loading todos:', error);
       },
     });
   }
 
-  // Add a new todo
   addTodo(): void {
     if (this.newTodo.trim()) {
-      const todo: Todo = { id: 0, title: this.newTodo, isComplete: false };
-      console.log('Adding TODO:', todo); // Debugging step
-
+      const todo: Todo = { id: 0, title: this.newTodo.trim(), isComplete: false };
       this.loading = true;
+
+      const fallbackTimer = setTimeout(() => {
+        if (this.loading) {
+          this.loading = false;
+          this.errorMessage = 'Adding TODO is taking longer than expected. Please try again later.';
+        }
+      }, this.fallbackTimeout);
+
       this.todoService.addTodo(todo).subscribe({
         next: (addedTodo) => {
+          clearTimeout(fallbackTimer);
           this.todos.push(addedTodo);
           this.newTodo = ''; // Clear input after adding
           this.loading = false;
           this.errorMessage = '';
         },
         error: (error) => {
-          this.errorMessage = 'Failed to add TODO. Please try again later.';
+          clearTimeout(fallbackTimer);
+          this.errorMessage = error.message || 'Failed to add TODO. Please try again later.';
           this.loading = false;
           console.error('Error adding todo:', error);
         },
@@ -62,34 +84,53 @@ export class TodoListComponent implements OnInit {
     }
   }
 
-  // Delete a todo
   deleteTodo(id: number): void {
     this.loading = true;
+
+    const fallbackTimer = setTimeout(() => {
+      if (this.loading) {
+        this.loading = false;
+        this.errorMessage = 'Deleting TODO is taking longer than expected. Please try again later.';
+      }
+    }, this.fallbackTimeout);
+
     this.todoService.deleteTodo(id).subscribe({
       next: () => {
+        clearTimeout(fallbackTimer);
         this.todos = this.todos.filter((todo) => todo.id !== id);
         this.loading = false;
         this.errorMessage = '';
       },
       error: (error) => {
-        this.errorMessage = 'Failed to delete TODO. Please try again later.';
+        clearTimeout(fallbackTimer);
+        this.errorMessage = error.message || 'Failed to delete TODO. Please try again later.';
         this.loading = false;
         console.error('Error deleting todo:', error);
       },
     });
   }
 
-  // Toggle the completion status of a todo
   toggleTodoStatus(todo: Todo): void {
+    const updatedStatus = !todo.isComplete;
     this.loading = true;
-    todo.isComplete = !todo.isComplete;
-    this.todoService.updateTodoStatus(todo.id, todo.isComplete).subscribe({
-      next: () => {
+
+    const fallbackTimer = setTimeout(() => {
+      if (this.loading) {
         this.loading = false;
+        this.errorMessage = 'Updating TODO status is taking longer than expected. Please try again later.';
+      }
+    }, this.fallbackTimeout);
+
+    this.todoService.updateTodoStatus(todo.id, updatedStatus).subscribe({
+      next: () => {
+        clearTimeout(fallbackTimer);
+        todo.isComplete = updatedStatus; // Update local status
+        this.loading = false;
+        this.errorMessage = '';
       },
       error: (error) => {
-        this.errorMessage =
-          'Failed to update TODO status. Please try again later.';
+        clearTimeout(fallbackTimer);
+        this.errorMessage = error.message || 'Failed to update TODO status. Please try again later.';
         this.loading = false;
         console.error('Error updating todo status:', error);
       },

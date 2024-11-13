@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, timeout } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 
-const API_URL = 'http://localhost:5000/api/todo'; //Update the port based on your env setup
-const REQUEST_TIMEOUT = 10000; // 10 seconds timeout for requests
+const API_URL = 'http://localhost:5000/api/todo'; // Update the port based on your environment setup
 
 export interface Todo {
   id: number;
@@ -18,61 +17,48 @@ export interface Todo {
 export class TodoService {
   constructor(private http: HttpClient) {}
 
-  // Get all todos with error handling
   getTodos(): Observable<Todo[]> {
     return this.http.get<Todo[]>(API_URL).pipe(
-      timeout(REQUEST_TIMEOUT),
-      catchError((error) => {
-        console.error('Error fetching todos:', error);
-        return throwError(
-          () =>
-            new Error('Unable to fetch TODOs. The server might be unavailable.')
-        );
-      })
+      catchError(this.handleError('fetch TODOs'))
     );
   }
 
-  // Add a new todo with error handling
   addTodo(todo: Todo): Observable<Todo> {
     return this.http.post<Todo>(API_URL, todo).pipe(
-      timeout(REQUEST_TIMEOUT),
-      catchError((error) => {
-        console.error('Error adding todo:', error);
-        return throwError(
-          () =>
-            new Error('Unable to add TODO. The server might be unavailable.')
-        );
-      })
+      catchError(this.handleError('add TODO'))
     );
   }
 
-  // Delete a todo by ID with error handling
   deleteTodo(id: number): Observable<void> {
     return this.http.delete<void>(`${API_URL}/${id}`).pipe(
-      timeout(REQUEST_TIMEOUT),
-      catchError((error) => {
-        console.error('Error deleting todo:', error);
-        return throwError(
-          () =>
-            new Error('Unable to delete TODO. The server might be unavailable.')
-        );
-      })
+      catchError(this.handleError('delete TODO'))
     );
   }
 
-  // Update the completion status of a todo with error handling
   updateTodoStatus(id: number, isComplete: boolean): Observable<void> {
     return this.http.put<void>(`${API_URL}/${id}`, isComplete).pipe(
-      timeout(REQUEST_TIMEOUT),
-      catchError((error) => {
-        console.error('Error updating todo status:', error);
-        return throwError(
-          () =>
-            new Error(
-              'Unable to update TODO status. The server might be unavailable.'
-            )
-        );
-      })
+      catchError(this.handleError('update TODO status'))
     );
+  }
+
+  // Centralized error handling
+  private handleError(operation: string) {
+    return (error: HttpErrorResponse): Observable<never> => {
+      let errorMessage: string;
+
+      if (error.status === 0) {
+        // Network error or server is unreachable
+        errorMessage = `Unable to connect to the server to ${operation}. Please check your network connection or try again later.`;
+      } else if (error.status >= 500) {
+        // Server-side error
+        errorMessage = `The server encountered an error while trying to ${operation}. Please try again later.`;
+      } else {
+        // Client-side error or other cases
+        errorMessage = `An error occurred while trying to ${operation}: ${error.message}`;
+      }
+
+      console.error(`${operation} failed:`, error); // Log error to console
+      return throwError(() => new Error(errorMessage));
+    };
   }
 }
