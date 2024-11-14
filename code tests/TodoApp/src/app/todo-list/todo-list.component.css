@@ -1,12 +1,40 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.container-fluid {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
 .todo-container {
   max-width: 640px;
   width: 100%;
 }
+
+.list-group-item .form-check-label {
+  cursor: pointer;
+}
+
 .footer-icon {
   color: red;
 }
+
 @media screen and (max-width: 767px) {
-  .add-button button{
+  .add-button button {
     margin: 1rem 0;
   }
 }
