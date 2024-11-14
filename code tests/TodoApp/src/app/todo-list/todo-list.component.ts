@@ -1,7 +1,7 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { TodoService, Todo } from '../todo.service';
-import { FormsModule } from '@angular/forms';
+import {Component, OnInit, Inject, PLATFORM_ID} from '@angular/core';
+import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {TodoService, Todo} from '../todo.service';
+import {FormsModule} from '@angular/forms';
 
 @Component({
   selector: 'app-todo-list',
@@ -14,6 +14,7 @@ export class TodoListComponent implements OnInit {
   todos: Todo[] = [];
   newTodo: string = '';
   errorMessage: string = '';
+  error: string = '';
   loading: boolean = false;
 
   private readonly fallbackTimeout = 5000; // 5 seconds
@@ -21,7 +22,8 @@ export class TodoListComponent implements OnInit {
   constructor(
     private todoService: TodoService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -55,33 +57,37 @@ export class TodoListComponent implements OnInit {
   }
 
   addTodo(): void {
-    if (this.newTodo.trim()) {
-      const todo: Todo = { id: 0, title: this.newTodo.trim(), isComplete: false };
-      this.loading = true;
-
-      const fallbackTimer = setTimeout(() => {
-        if (this.loading) {
-          this.loading = false;
-          this.errorMessage = 'Adding TODO is taking longer than expected. Please try again later.';
-        }
-      }, this.fallbackTimeout);
-
-      this.todoService.addTodo(todo).subscribe({
-        next: (addedTodo) => {
-          clearTimeout(fallbackTimer);
-          this.todos.push(addedTodo);
-          this.newTodo = ''; // Clear input after adding
-          this.loading = false;
-          this.errorMessage = '';
-        },
-        error: (error) => {
-          clearTimeout(fallbackTimer);
-          this.errorMessage = error.message || 'Failed to add TODO. Please try again later.';
-          this.loading = false;
-          console.error('Error adding todo:', error);
-        },
-      });
+    if (!this.newTodo.trim()) {
+      this.error = 'Please enter a todo item before adding.';
+      document.getElementById('todoInput')?.focus();
+      return;
     }
+    this.error = '';
+    const todo: Todo = {id: 0, title: this.newTodo.trim(), isComplete: false};
+    this.loading = true;
+
+    const fallbackTimer = setTimeout(() => {
+      if (this.loading) {
+        this.loading = false;
+        this.errorMessage = 'Adding TODO is taking longer than expected. Please try again later.';
+      }
+    }, this.fallbackTimeout);
+
+    this.todoService.addTodo(todo).subscribe({
+      next: (addedTodo) => {
+        clearTimeout(fallbackTimer);
+        this.todos.push(addedTodo);
+        this.newTodo = '';
+        this.loading = false;
+        this.errorMessage = '';
+      },
+      error: (error) => {
+        clearTimeout(fallbackTimer);
+        this.errorMessage = error.message || 'Failed to add TODO. Please try again later.';
+        this.loading = false;
+        console.error('Error adding todo:', error);
+      },
+    });
   }
 
   deleteTodo(id: number): void {
