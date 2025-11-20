@@ -45,7 +45,8 @@ export class TodoListComponent implements OnInit {
         clearTimeout(fallbackTimer);
         this.todos = todos;
         this.loading = false;
-        this.errorMessage = ''; // Clear any previous error messages
+        this.errorMessage = '';
+        document.getElementById('todoInput')?.focus();
       },
       error: (error) => {
         clearTimeout(fallbackTimer);
@@ -80,6 +81,7 @@ export class TodoListComponent implements OnInit {
         this.newTodo = '';
         this.loading = false;
         this.errorMessage = '';
+        document.getElementById('todoInput')?.focus();
       },
       error: (error) => {
         clearTimeout(fallbackTimer);
