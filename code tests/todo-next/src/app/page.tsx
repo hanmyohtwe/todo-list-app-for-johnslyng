@@ -11,9 +11,7 @@ export default function Home() {
     error,
     mutate,
     isLoading,
-  } = useSWR("todos", getTodos, {
-    refreshInterval: 1000, // Poll every 1 second
-  });
+  } = useSWR("todos", getTodos);
 
   async function handleAdd(title: string) {
     try {

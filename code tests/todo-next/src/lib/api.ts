@@ -1,35 +1,39 @@
 import { Todo } from "@/types/todo";
 
-const API_URL = "http://localhost:5000/api/todo";
+const LOCAL_STORAGE_KEY = "offline_todos";
 
 export async function getTodos(): Promise<Todo[]> {
-  const res = await fetch(API_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch todos");
-  return res.json();
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return [];
 }
 
 export async function addTodo(title: string): Promise<Todo> {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, isComplete: false }),
-  });
-  if (!res.ok) throw new Error("Failed to add todo");
-  return res.json();
+  const todos = await getTodos();
+  const newTodo: Todo = {
+    id: Date.now(),
+    title,
+    isComplete: false,
+  };
+  todos.push(newTodo);
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos));
+  return newTodo;
 }
 
 export async function updateTodo(id: number, isComplete: boolean): Promise<void> {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(isComplete),
-  });
-  if (!res.ok) throw new Error("Failed to update todo");
+  const todos = await getTodos();
+  const index = todos.findIndex(t => t.id === id);
+  if (index !== -1) {
+    todos[index].isComplete = isComplete;
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos));
+  }
 }
 
 export async function deleteTodo(id: number): Promise<void> {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete todo");
+  let todos = await getTodos();
+  todos = todos.filter(t => t.id !== id);
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos));
 }
